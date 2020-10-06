@@ -9,7 +9,7 @@ This Action builds an Xcode project.
 For simple projects where there is one scheme, invoking `xcode-archive` can be as simple as this:
 
 ```yaml
-- name: "Archive"
+- name: "Build"
   uses: devbotsxyz/xcode-build@v1
 ```
 
