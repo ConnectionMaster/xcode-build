@@ -22,8 +22,10 @@
 const core = require('@actions/core');
 const execa = require('execa');
 
+const { parseDestination, encodeDestinationOption } = require('./destinations');
 
-const buildProject = async ({workspace, project, scheme, configuration, codeSignIdentity}) => {
+
+const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, developmentTeam}) => {
     let options = []
     if (workspace != "") {
         options.push("-workspace", workspace);
@@ -37,11 +39,25 @@ const buildProject = async ({workspace, project, scheme, configuration, codeSign
     if (configuration != "") {
         options.push("-configuration", configuration);
     }
+    if (destination != "") {
+        options.push("-destination", encodeDestinationOption(destination) );
+    }
+    if (sdk != "") {
+        options.push("-sdk", sdk);
+    }
+    if (arch != "") {
+        options.push("-arch", arch);
+    }
 
     let buildOptions = []
     if (codeSignIdentity != "") {
         buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
     }
+    if (developmentTeam != "") {
+        buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
+    }
+
+    console.log("EXECUTING:", 'xcodebuild', [...options, 'build', ...buildOptions]);
 
     const xcodebuild = execa('xcodebuild', [...options, 'build', ...buildOptions], {
         reject: false,
@@ -64,8 +80,16 @@ const parseConfiguration = async () => {
         project: core.getInput("project"),
         scheme: core.getInput("scheme"),
         configuration: core.getInput("configuration"),
+        sdk: core.getInput("sdk"),
+        arch: core.getInput("arch"),
+        destination: core.getInput("destination"),
         codeSignIdentity: core.getInput('code-sign-identity'),
+        developmentTeam: core.getInput('development-team'),
     };
+
+    if (configuration.destination !== "") {
+        configuration.destination = parseDestination(configuration.destination);
+    }
 
     return configuration;
 }
