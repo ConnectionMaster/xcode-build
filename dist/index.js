@@ -130,7 +130,7 @@ const execa = __webpack_require__(5447);
 const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
 
 
-const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, developmentTeam}) => {
+const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, allowProvisioningUpdates, developmentTeam}) => {
     let options = []
     if (workspace != "") {
         options.push("-workspace", workspace);
@@ -152,6 +152,9 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
     }
     if (arch != "") {
         options.push("-arch", arch);
+    }
+    if (allowProvisioningUpdates === true) {
+        options.push("-allowProvisioningUpdates");
     }
 
     let buildOptions = []
@@ -189,6 +192,7 @@ const parseConfiguration = async () => {
         arch: core.getInput("arch"),
         destination: core.getInput("destination"),
         codeSignIdentity: core.getInput('code-sign-identity'),
+        allowProvisioningUpdates: core.getInput('allow-provisioning-updates') === "true",
         developmentTeam: core.getInput('development-team'),
         resultBundlePath: core.getInput("result-bundle-path"),
         resultBundleName: core.getInput("result-bundle-name"),
