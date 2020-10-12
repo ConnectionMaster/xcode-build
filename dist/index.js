@@ -130,7 +130,7 @@ const execa = __webpack_require__(5447);
 const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
 
 
-const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, allowProvisioningUpdates, developmentTeam}) => {
+const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, codeSigningRequired, allowProvisioningUpdates, developmentTeam}) => {
     let options = []
     if (workspace != "") {
         options.push("-workspace", workspace);
@@ -158,8 +158,15 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
     }
 
     let buildOptions = []
-    if (codeSignIdentity != "") {
+    if (codeSignIdentity !== "") {
         buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
+    }
+    if (codeSigningRequired !== "") {
+        if (codeSigningRequired === "true") {
+            buildOptions.push('CODE_SIGNING_REQUIRED=YES');
+        } else {
+            buildOptions.push('CODE_SIGNING_REQUIRED=NO');
+        }
     }
     if (developmentTeam != "") {
         buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
@@ -192,6 +199,7 @@ const parseConfiguration = async () => {
         arch: core.getInput("arch"),
         destination: core.getInput("destination"),
         codeSignIdentity: core.getInput('code-sign-identity'),
+        codeSigningRequired: core.getInput('code-signing-required'),
         allowProvisioningUpdates: core.getInput('allow-provisioning-updates') === "true",
         developmentTeam: core.getInput('development-team'),
         resultBundlePath: core.getInput("result-bundle-path"),

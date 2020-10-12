@@ -51,6 +51,9 @@ inputs:
   code-sign-identity:
     description: 'Code sign identity'
     required: false
+  code-signing-required:
+    description: 'Code signing required'
+    required: false
   allow-provisioning-updates:
     description: 'Allow this action (through `xcodebuild`) to communicate with the Apple Developer website. For automatically signed targets, xcodebuild will create and update profiles, app IDs, and certificates. For manually signed targets, xcodebuild will download missing or updated provisioning profiles. This requires the XXX and YYY inputs to be set.'
     default: false
