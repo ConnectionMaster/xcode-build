@@ -19,9 +19,6 @@
 // SOFTWARE.
 
 
-const execa = require('execa');
-
-
 /**
  * Validates a parsed destination. Throws an Error in case the destination is invalid.
  * Makes sure required keys are there and that no other keys are in the map.

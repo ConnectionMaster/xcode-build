@@ -51,10 +51,17 @@ inputs:
   code-sign-identity:
     description: 'Code sign identity'
     required: false
-    default: '-'
   development-team:
     description: 'Development team ID'
     required: false
+
+  result-bundle-path:
+    description: "Path of the .xcresult bundle"
+    required: false
+  result-bundle-name:
+    description: "Name of uploaded .xcresult artifact"
+    required: false
+    default: "Build Results"
 
 runs:
   using: 'node12'

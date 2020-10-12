@@ -19,7 +19,11 @@
 // SOFTWARE.
 
 
+const path = require('path');
+const fs = require('fs');
+
 const core = require('@actions/core');
+const artifact = require('@actions/artifact');
 const execa = require('execa');
 
 const { parseDestination, encodeDestinationOption } = require('./destinations');
@@ -85,20 +89,64 @@ const parseConfiguration = async () => {
         destination: core.getInput("destination"),
         codeSignIdentity: core.getInput('code-sign-identity'),
         developmentTeam: core.getInput('development-team'),
+        resultBundlePath: core.getInput("result-bundle-path"),
+        resultBundleName: core.getInput("result-bundle-name"),
     };
 
     if (configuration.destination !== "") {
         configuration.destination = parseDestination(configuration.destination);
     }
 
+    // TODO Validate the resultBundlePath
+
     return configuration;
 }
+
+
+// TODO This is now in two actions, move it to @devbotsxyz/xcresult together with xcresult.ts from xcresult-annotate?
+const archiveResultBundle = async (resultBundlePath) => {
+    const archivePath = resultBundlePath + ".zip";
+
+    const args = [
+        "-c",             // Create an archive at the destination path
+        "-k",             // Create a PKZip archive
+        "--keepParent",   // Embed the parent directory name src in dst_archive.
+        resultBundlePath, // Source
+        archivePath,      // Destination
+    ];
+
+    try {
+        await execa("ditto", args);
+    } catch (error) {
+        core.error(error);
+        return null;
+    }
+
+    return archivePath;
+};
+
+
+const uploadResultBundleArtifact = async (resultBundleArchivePath, resultBundleName) => {
+    const artifactClient = artifact.create()
+    /* const uploadResult = */ await artifactClient.uploadArtifact(
+        resultBundleName,
+        [resultBundleArchivePath],
+        path.dirname(resultBundleArchivePath)
+    )
+};
 
 
 const main = async () => {
     try {
         const configuration = await parseConfiguration();
+
         await buildProject(configuration);
+
+        // Upload the results bundle as an artifact
+        if (configuration.resultBundlePath !== "" && fs.existsSync(configuration.resultBundlePath)) {
+            const resultBundleArchivePath = await archiveResultBundle(configuration.resultBundlePath);
+            await uploadResultBundleArtifact(resultBundleArchivePath, configuration.resultBundleName);
+        }
     } catch (err) {
         core.setFailed(`Build failed with an unexpected error: ${err.message}`);
     }
