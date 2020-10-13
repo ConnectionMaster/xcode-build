@@ -31,7 +31,7 @@ const { parseDestination, encodeDestinationOption } = require('./destinations');
 
 const getOptionalInput = (name) => {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
-    if (val !== undefined && val !== "<<undefined>>") {
+    if (val !== undefined && val !== "" && val !== "<<undefined>>") {
         return val.trim();
     }
 };
