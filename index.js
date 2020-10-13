@@ -28,52 +28,101 @@ const execa = require('execa');
 
 const { parseDestination, encodeDestinationOption } = require('./destinations');
 
+const getOptionalInput = (name) => {
+    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
+    if (val !== undefined) {
+        return val.trim()
+    }
+}
 
-const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, codeSignIdentity, codeSigningRequired, allowProvisioningUpdates, developmentTeam}) => {
+const getOptionalBooleanInput = (name) => {
+    let value = getOptionalInput(name);
+    if (value !== undefined) {
+        value = value.toLowerCase()
+        if (value != 'true' && value != 'false') {
+            throw new Error(`Optional input <${name}> only accepts true or false.`);
+        }
+        return value
+    }
+}
+
+const getOptionalYesNoInput = (name) => {
+    let value = getOptionalInput(name);
+    if (value !== undefined) {
+        value = value.toUpperCase()
+        if (value != 'YES' && value != 'NO') {
+            throw new Error(`Optional input <${name}> only accepts yes or no.`);
+        }
+        return value
+    }
+}
+
+const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, disableCodeSigning, codeSignIdentity, codeSigningRequired, codeSignEntitlements, codeSigningAllowed, developmentTeam, clean}) => {
     let options = []
-    if (workspace != "") {
+    if (workspace !== undefined) {
         options.push("-workspace", workspace);
     }
-    if (project != "") {
+    if (project !== undefined) {
         options.push("-project", project);
     }
-    if (scheme != "") {
+    if (scheme !== undefined) {
         options.push("-scheme", scheme);
     }
-    if (configuration != "") {
+    if (configuration !== undefined) {
         options.push("-configuration", configuration);
     }
-    if (destination != "") {
+    if (destination !== undefined) {
         options.push("-destination", encodeDestinationOption(destination) );
     }
-    if (sdk != "") {
+    if (sdk !== undefined) {
         options.push("-sdk", sdk);
     }
-    if (arch != "") {
+    if (arch !== undefined) {
         options.push("-arch", arch);
-    }
-    if (allowProvisioningUpdates === true) {
-        options.push("-allowProvisioningUpdates");
     }
 
     let buildOptions = []
-    if (codeSignIdentity !== "") {
-        buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
-    }
-    if (codeSigningRequired !== "") {
-        if (codeSigningRequired === "true") {
-            buildOptions.push('CODE_SIGNING_REQUIRED=YES');
-        } else {
-            buildOptions.push('CODE_SIGNING_REQUIRED=NO');
+
+    if (disableCodeSigning === "true") {
+        buildOptions.push('CODE_SIGN_IDENTITY=""');
+        buildOptions.push('CODE_SIGNING_REQUIRED="NO"');
+        buildOptions.push('CODE_SIGN_ENTITLEMENTS=""');
+        buildOptions.push('CODE_SIGNING_ALLOWED="NO"');    
+    } else {
+        if (codeSignIdentity !== undefined) {
+            buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
         }
+        if (codeSigningRequired !== undefined) {
+            if (codeSigningRequired === "true") {
+                buildOptions.push('CODE_SIGNING_REQUIRED=YES');
+            } else {
+                buildOptions.push('CODE_SIGNING_REQUIRED=NO');
+            }
+        }    
+        if (codeSignEntitlements !== undefined) {
+            buildOptions.push('CODE_SIGN_ENTITLEMENTS=YES');
+        }    
+        if (codeSigningAllowed !== undefined) {
+            if (codeSigningAllowed === "true") {
+                buildOptions.push('CODE_SIGNING_ALLOWED=YES');
+            } else {
+                buildOptions.push('CODE_SIGNING_ALLOWED=NO');
+            }
+        }    
     }
-    if (developmentTeam != "") {
+
+    let command = ['build']
+    if (developmentTeam !== undefined) {
         buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
     }
 
-    console.log("EXECUTING:", 'xcodebuild', [...options, 'build', ...buildOptions]);
+    if (clean === "true") {
+        command = ['clean', ...command]
+    }
 
-    const xcodebuild = execa('xcodebuild', [...options, 'build', ...buildOptions], {
+    console.log("EXECUTING:", 'xcodebuild', [...options, ...command, ...buildOptions]);
+
+    const xcodebuild = execa('xcodebuild', [...options, ...command, ...buildOptions], {
         reject: false,
         env: {"NSUnbufferedIO": "YES"},
     });
@@ -90,19 +139,22 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
 
 const parseConfiguration = async () => {
     const configuration = {
-        workspace: core.getInput("workspace"),
-        project: core.getInput("project"),
-        scheme: core.getInput("scheme"),
-        configuration: core.getInput("configuration"),
-        sdk: core.getInput("sdk"),
-        arch: core.getInput("arch"),
-        destination: core.getInput("destination"),
-        codeSignIdentity: core.getInput('code-sign-identity'),
-        codeSigningRequired: core.getInput('code-signing-required'),
-        allowProvisioningUpdates: core.getInput('allow-provisioning-updates') === "true",
-        developmentTeam: core.getInput('development-team'),
-        resultBundlePath: core.getInput("result-bundle-path"),
-        resultBundleName: core.getInput("result-bundle-name"),
+        workspace: getOptionalInput("workspace"),
+        project: getOptionalInput("project"),
+        scheme: getOptionalInput("scheme"),
+        configuration: getOptionalInput("configuration"),
+        sdk: getOptionalInput("sdk"),
+        arch: getOptionalInput("arch"),
+        destination: getOptionalInput("destination"),
+        clean: getOptionalBooleanInput("clean"),
+        disableCodeSigning: getOptionalBooleanInput('disable-code-signing'),
+        codeSignIdentity: getOptionalInput('CODE_SIGN_IDENTITY'),
+        codeSigningRequired: getOptionalYesNoInput('CODE_SIGNING_REQUIRED'),
+        codeSignEntitlements: getOptionalInput('CODE_SIGN_ENTITLEMENTS'),
+        codeSigningAllowed: getOptionalYesNoInput('CODE_SIGNING_ALLOWED'),
+        developmentTeam: getOptionalInput('development-team'),
+        resultBundlePath: getOptionalInput("result-bundle-path"),
+        resultBundleName: getOptionalInput("result-bundle-name"),
     };
 
     if (configuration.destination !== "") {

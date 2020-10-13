@@ -48,16 +48,27 @@ inputs:
     description: 'Architecture'
     required: false
 
-  code-sign-identity:
-    description: 'Code sign identity'
-    required: false
-  code-signing-required:
-    description: 'Code signing required'
-    required: false
-  allow-provisioning-updates:
-    description: 'Allow this action (through `xcodebuild`) to communicate with the Apple Developer website. For automatically signed targets, xcodebuild will create and update profiles, app IDs, and certificates. For manually signed targets, xcodebuild will download missing or updated provisioning profiles. This requires the XXX and YYY inputs to be set.'
+  clean:
+    description: 'Do a clean build'
     default: false
-  development-team:
+
+  disable-code-signing:
+    description: 'Completely disable code signing. Equivalent to CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED=NO'
+    required: false
+
+  CODE_SIGN_IDENTITY:
+    description: ''
+    required: false
+  CODE_SIGNING_REQUIRED:
+    description: ''
+    required: false
+  CODE_SIGN_ENTITLEMENTS:
+    description: ''
+    required: false
+  CODE_SIGNING_ALLOWED:
+    description: ''
+    required: false
+  DEVELOPMENT_TEAM:
     description: 'Development team ID'
     required: false
 
