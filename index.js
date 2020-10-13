@@ -140,8 +140,6 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
 
 
 const parseConfiguration = async () => {
-    console.log(process.env);
-
     const configuration = {
         workspace: getOptionalInput("workspace"),
         project: getOptionalInput("project"),
