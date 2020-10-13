@@ -132,14 +132,14 @@ const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
 
 const getOptionalInput = (name) => {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
-    if (val !== undefined) {
+    if (val !== "<<undefined>>") {
         return val.trim();
     }
 };
 
 const getOptionalBooleanInput = (name) => {
     let value = getOptionalInput(name);
-    if (value !== undefined) {
+    if (value !== "") {
         value = value.toLowerCase();
         if (value !== 'true' && value !== 'false') {
             throw new Error(`Optional input <${name}> only accepts true or false. Got <${value}>.`);
@@ -150,7 +150,7 @@ const getOptionalBooleanInput = (name) => {
 
 const getOptionalYesNoInput = (name) => {
     let value = getOptionalInput(name);
-    if (value !== undefined) {
+    if (value !== "") {
         value = value.toUpperCase();
         if (value !== 'YES' && value !== 'NO') {
             throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
@@ -242,7 +242,7 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
 
 const parseConfiguration = async () => {
     console.log(process.env);
-    
+
     const configuration = {
         workspace: getOptionalInput("workspace"),
         project: getOptionalInput("project"),

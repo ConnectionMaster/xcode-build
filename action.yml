@@ -59,12 +59,14 @@ inputs:
   CODE_SIGN_IDENTITY:
     description: ''
     required: false
+    default: "<<undefined>>"
   CODE_SIGNING_REQUIRED:
     description: ''
     required: false
   CODE_SIGN_ENTITLEMENTS:
     description: ''
     required: false
+    default: "<<undefined>>"
   CODE_SIGNING_ALLOWED:
     description: ''
     required: false
