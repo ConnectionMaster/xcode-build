@@ -132,7 +132,7 @@ const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
 
 const getOptionalInput = (name) => {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
-    if (val !== "<<undefined>>") {
+    if (val !== undefined && val !== "<<undefined>>") {
         return val.trim();
     }
 };
