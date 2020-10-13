@@ -130,6 +130,7 @@ const execa = __webpack_require__(5447);
 const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
 
 
+// TODO Write some damn tests
 const getOptionalInput = (name) => {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
     if (val !== undefined && val !== "" && val !== "<<undefined>>") {
@@ -139,7 +140,7 @@ const getOptionalInput = (name) => {
 
 const getOptionalBooleanInput = (name) => {
     let value = getOptionalInput(name);
-    if (value !== "") {
+    if (value !== undefined) {
         value = value.toLowerCase();
         if (value !== 'true' && value !== 'false') {
             throw new Error(`Optional input <${name}> only accepts true or false. Got <${value}>.`);
@@ -150,7 +151,7 @@ const getOptionalBooleanInput = (name) => {
 
 const getOptionalYesNoInput = (name) => {
     let value = getOptionalInput(name);
-    if (value !== "") {
+    if (value !== undefined) {
         value = value.toUpperCase();
         if (value !== 'YES' && value !== 'NO') {
             throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
