@@ -31,29 +31,29 @@ const { parseDestination, encodeDestinationOption } = require('./destinations');
 const getOptionalInput = (name) => {
     const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
     if (val !== undefined) {
-        return val.trim()
+        return val.trim();
     }
 }
 
 const getOptionalBooleanInput = (name) => {
     let value = getOptionalInput(name);
     if (value !== undefined) {
-        value = value.toLowerCase()
+        value = value.toLowerCase();
         if (value != 'true' && value != 'false') {
             throw new Error(`Optional input <${name}> only accepts true or false.`);
         }
-        return value
+        return value;
     }
 }
 
 const getOptionalYesNoInput = (name) => {
     let value = getOptionalInput(name);
     if (value !== undefined) {
-        value = value.toUpperCase()
+        value = value.toUpperCase();
         if (value != 'YES' && value != 'NO') {
-            throw new Error(`Optional input <${name}> only accepts yes or no.`);
+            throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
         }
-        return value
+        return value;
     }
 }
 
