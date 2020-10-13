@@ -60,7 +60,7 @@ const getOptionalYesNoInput = (name) => {
 };
 
 
-const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, disableCodeSigning, codeSignIdentity, codeSigningRequired, codeSignEntitlements, codeSigningAllowed, developmentTeam, clean}) => {
+const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, disableCodeSigning, codeSignIdentity, codeSigningRequired, codeSignEntitlements, codeSigningAllowed, developmentTeam, clean, resultBundlePath}) => {
     let options = []
     if (workspace !== undefined) {
         options.push("-workspace", workspace);
@@ -114,6 +114,9 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
         }    
     }
 
+    if (resultBundlePath !== "") {
+        buildOptions = [...buildOptions, '-resultBundlePath', resultBundlePath];
+    }
     let command = ['build']
     if (developmentTeam !== undefined) {
         buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
@@ -210,7 +213,10 @@ const main = async () => {
         await buildProject(configuration);
 
         // Upload the results bundle as an artifact
-        if (configuration.resultBundlePath !== "" && fs.existsSync(configuration.resultBundlePath)) {
+        if (configuration.resultBundlePath !== undefined) {
+            if (!fs.existsSync(configuration.resultBundlePath)) {
+                throw new Error(`Could not find result bundle at ${configuration.resultBundlePath}`);
+            }
             const resultBundleArchivePath = await archiveResultBundle(configuration.resultBundlePath);
             await uploadResultBundleArtifact(resultBundleArchivePath, configuration.resultBundleName);
         }
