@@ -219,8 +219,10 @@ const main = async () => {
             }
             const resultBundleArchivePath = await archiveResultBundle(configuration.resultBundlePath);
             await uploadResultBundleArtifact(resultBundleArchivePath, configuration.resultBundleName);
+            core.setOutput('result-bundle-path', path.resolve(configuration.resultBundlePath))
         }
     } catch (err) {
+        console.log(err);
         core.setFailed(`Build failed with an unexpected error: ${err.message}`);
     }
 };

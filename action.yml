@@ -82,6 +82,10 @@ inputs:
     required: false
     default: "Build Results"
 
+outputs:
+  result-bundle-path:
+    description: "Path of the .xcresult bundle"
+
 runs:
   using: 'node12'
   main: 'dist/index.js'
