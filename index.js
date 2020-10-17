@@ -163,7 +163,7 @@ const parseConfiguration = async () => {
         resultBundleName: getOptionalInput("result-bundle-name"),
     };
 
-    if (configuration.destination !== "") {
+    if (configuration.destination !== undefined) {
         configuration.destination = parseDestination(configuration.destination);
     }
 
