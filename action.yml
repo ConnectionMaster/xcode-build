@@ -29,24 +29,31 @@ inputs:
   workspace:
     description: 'Workspace'
     required: false
+    default: "<<undefined>>"
   project:
     description: 'Project'
     required: false
+    default: "<<undefined>>"
   scheme:
     description: 'Scheme'
     required: false
+    default: "<<undefined>>"
   configuration:
     description: 'Configuration'
     required: false
+    default: "<<undefined>>"
   destination:
     description: 'Destination'
     required: false
+    default: "<<undefined>>"
   sdk:
     description: 'SDK'
     required: false
+    default: "<<undefined>>"
   arch:
     description: 'Architecture'
     required: false
+    default: "<<undefined>>"
 
   clean:
     description: 'Do a clean build'
@@ -81,6 +88,7 @@ inputs:
   result-bundle-path:
     description: "Path of the .xcresult bundle"
     required: false
+    default: "<<undefined>>"
   result-bundle-name:
     description: "Name of uploaded .xcresult artifact"
     required: false
