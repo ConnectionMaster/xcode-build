@@ -26,38 +26,8 @@ const core = require('@actions/core');
 const artifact = require('@actions/artifact');
 const execa = require('execa');
 
+const { getOptionalInput, getOptionalBooleanInput, getOptionalYesNoInput } = require('@devbotsxyz/inputs');
 const { parseDestination, encodeDestinationOption } = require('./destinations');
-
-
-// TODO Write some damn tests
-const getOptionalInput = (name) => {
-    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
-    if (val !== undefined && val !== "" && val !== "<<undefined>>") {
-        return val.trim();
-    }
-};
-
-const getOptionalBooleanInput = (name) => {
-    let value = getOptionalInput(name);
-    if (value !== undefined) {
-        value = value.toLowerCase();
-        if (value !== 'true' && value !== 'false') {
-            throw new Error(`Optional input <${name}> only accepts true or false. Got <${value}>.`);
-        }
-        return value;
-    }
-};
-
-const getOptionalYesNoInput = (name) => {
-    let value = getOptionalInput(name);
-    if (value !== undefined) {
-        value = value.toUpperCase();
-        if (value !== 'YES' && value !== 'NO') {
-            throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
-        }
-        return value;
-    }
-};
 
 
 const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, disableCodeSigning, codeSignIdentity, codeSigningRequired, codeSignEntitlements, codeSigningAllowed, developmentTeam, clean, resultBundlePath}) => {
@@ -86,49 +56,44 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
 
     let buildOptions = []
 
-    if (disableCodeSigning === "true") {
-        buildOptions.push('CODE_SIGN_IDENTITY=""');
-        buildOptions.push('CODE_SIGNING_REQUIRED="NO"');
-        buildOptions.push('CODE_SIGN_ENTITLEMENTS=""');
-        buildOptions.push('CODE_SIGNING_ALLOWED="NO"');    
-    } else {
-        if (codeSignIdentity !== undefined) {
-            buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
-        }
-        if (codeSigningRequired !== undefined) {
-            if (codeSigningRequired === "true") {
-                buildOptions.push('CODE_SIGNING_REQUIRED=YES');
-            } else {
-                buildOptions.push('CODE_SIGNING_REQUIRED=NO');
-            }
-        }    
-        if (codeSignEntitlements !== undefined) {
-            buildOptions.push('CODE_SIGN_ENTITLEMENTS=YES');
-        }    
-        if (codeSigningAllowed !== undefined) {
-            if (codeSigningAllowed === "true") {
-                buildOptions.push('CODE_SIGNING_ALLOWED=YES');
-            } else {
-                buildOptions.push('CODE_SIGNING_ALLOWED=NO');
-            }
-        }    
-    }
-
-    if (resultBundlePath !== "") {
+    if (resultBundlePath !== undefined) {
         buildOptions = [...buildOptions, '-resultBundlePath', resultBundlePath];
     }
-    let command = ['build']
-    if (developmentTeam !== undefined) {
-        buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
+
+    let buildSettings = []
+    
+    if (disableCodeSigning === true) {
+        buildSettings.push('CODE_SIGN_IDENTITY=""');
+        buildSettings.push('CODE_SIGNING_REQUIRED="NO"');
+        buildSettings.push('CODE_SIGN_ENTITLEMENTS=""');
+        buildSettings.push('CODE_SIGNING_ALLOWED="NO"');
+    } else {
+        if (codeSignIdentity !== undefined) {
+            buildSettings.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
+        }
+        if (codeSigningRequired !== undefined) {
+            buildSettings.push(`CODE_SIGNING_REQUIRED=${codeSigningRequired ? 'YES' : 'NO'}`);
+        }
+        if (codeSignEntitlements !== undefined) {
+            buildSettings.push(`CODE_SIGN_ENTITLEMENTS=${codeSignEntitlements}`);
+        }
+        if (codeSigningAllowed !== undefined) {
+            buildSettings.push(`CODE_SIGNING_ALLOWED=${codeSigningAllowed ? 'YES' : 'NO'}`);
+        }
     }
 
-    if (clean === "true") {
+    if (developmentTeam !== undefined) {
+        buildSettings.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
+    }
+
+    let command = ['build']
+    if (clean === true) {
         command = ['clean', ...command]
     }
 
-    console.log("EXECUTING:", 'xcodebuild', [...options, ...command, ...buildOptions]);
+    console.log("EXECUTING:", 'xcodebuild', [...options, ...command, ...buildOptions, ...buildSettings]);
 
-    const xcodebuild = execa('xcodebuild', [...options, ...command, ...buildOptions], {
+    const xcodebuild = execa('xcodebuild', [...options, ...command, ...buildOptions, ...buildSettings], {
         reject: false,
         env: {"NSUnbufferedIO": "YES"},
     });
