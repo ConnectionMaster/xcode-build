@@ -127,38 +127,8 @@ const core = __webpack_require__(2186);
 const artifact = __webpack_require__(2605);
 const execa = __webpack_require__(5447);
 
+const { getOptionalInput, getOptionalBooleanInput, getOptionalYesNoInput } = __webpack_require__(2449);
 const { parseDestination, encodeDestinationOption } = __webpack_require__(7020);
-
-
-// TODO Write some damn tests
-const getOptionalInput = (name) => {
-    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
-    if (val !== undefined && val !== "" && val !== "<<undefined>>") {
-        return val.trim();
-    }
-};
-
-const getOptionalBooleanInput = (name) => {
-    let value = getOptionalInput(name);
-    if (value !== undefined) {
-        value = value.toLowerCase();
-        if (value !== 'true' && value !== 'false') {
-            throw new Error(`Optional input <${name}> only accepts true or false. Got <${value}>.`);
-        }
-        return value;
-    }
-};
-
-const getOptionalYesNoInput = (name) => {
-    let value = getOptionalInput(name);
-    if (value !== undefined) {
-        value = value.toUpperCase();
-        if (value !== 'YES' && value !== 'NO') {
-            throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
-        }
-        return value;
-    }
-};
 
 
 const buildProject = async ({workspace, project, scheme, configuration, sdk, arch, destination, disableCodeSigning, codeSignIdentity, codeSigningRequired, codeSignEntitlements, codeSigningAllowed, developmentTeam, clean, resultBundlePath}) => {
@@ -187,49 +157,44 @@ const buildProject = async ({workspace, project, scheme, configuration, sdk, arc
 
     let buildOptions = []
 
-    if (disableCodeSigning === "true") {
-        buildOptions.push('CODE_SIGN_IDENTITY=""');
-        buildOptions.push('CODE_SIGNING_REQUIRED="NO"');
-        buildOptions.push('CODE_SIGN_ENTITLEMENTS=""');
-        buildOptions.push('CODE_SIGNING_ALLOWED="NO"');    
-    } else {
-        if (codeSignIdentity !== undefined) {
-            buildOptions.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
-        }
-        if (codeSigningRequired !== undefined) {
-            if (codeSigningRequired === "true") {
-                buildOptions.push('CODE_SIGNING_REQUIRED=YES');
-            } else {
-                buildOptions.push('CODE_SIGNING_REQUIRED=NO');
-            }
-        }    
-        if (codeSignEntitlements !== undefined) {
-            buildOptions.push('CODE_SIGN_ENTITLEMENTS=YES');
-        }    
-        if (codeSigningAllowed !== undefined) {
-            if (codeSigningAllowed === "true") {
-                buildOptions.push('CODE_SIGNING_ALLOWED=YES');
-            } else {
-                buildOptions.push('CODE_SIGNING_ALLOWED=NO');
-            }
-        }    
-    }
-
-    if (resultBundlePath !== "") {
+    if (resultBundlePath !== undefined) {
         buildOptions = [...buildOptions, '-resultBundlePath', resultBundlePath];
     }
-    let command = ['build']
-    if (developmentTeam !== undefined) {
-        buildOptions.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
+
+    let buildSettings = []
+    
+    if (disableCodeSigning === true) {
+        buildSettings.push('CODE_SIGN_IDENTITY=""');
+        buildSettings.push('CODE_SIGNING_REQUIRED="NO"');
+        buildSettings.push('CODE_SIGN_ENTITLEMENTS=""');
+        buildSettings.push('CODE_SIGNING_ALLOWED="NO"');
+    } else {
+        if (codeSignIdentity !== undefined) {
+            buildSettings.push(`CODE_SIGN_IDENTITY=${codeSignIdentity}`);
+        }
+        if (codeSigningRequired !== undefined) {
+            buildSettings.push(`CODE_SIGNING_REQUIRED=${codeSigningRequired ? 'YES' : 'NO'}`);
+        }
+        if (codeSignEntitlements !== undefined) {
+            buildSettings.push(`CODE_SIGN_ENTITLEMENTS=${codeSignEntitlements}`);
+        }
+        if (codeSigningAllowed !== undefined) {
+            buildSettings.push(`CODE_SIGNING_ALLOWED=${codeSigningAllowed ? 'YES' : 'NO'}`);
+        }
     }
 
-    if (clean === "true") {
+    if (developmentTeam !== undefined) {
+        buildSettings.push(`DEVELOPMENT_TEAM=${developmentTeam}`);
+    }
+
+    let command = ['build']
+    if (clean === true) {
         command = ['clean', ...command]
     }
 
-    console.log("EXECUTING:", 'xcodebuild', [...options, ...command, ...buildOptions]);
+    console.log("EXECUTING:", 'xcodebuild', [...options, ...command, ...buildOptions, ...buildSettings]);
 
-    const xcodebuild = execa('xcodebuild', [...options, ...command, ...buildOptions], {
+    const xcodebuild = execa('xcodebuild', [...options, ...command, ...buildOptions, ...buildSettings], {
         reject: false,
         env: {"NSUnbufferedIO": "YES"},
     });
@@ -264,7 +229,7 @@ const parseConfiguration = async () => {
         resultBundleName: getOptionalInput("result-bundle-name"),
     };
 
-    if (configuration.destination !== "") {
+    if (configuration.destination !== undefined) {
         configuration.destination = parseDestination(configuration.destination);
     }
 
@@ -320,8 +285,10 @@ const main = async () => {
             }
             const resultBundleArchivePath = await archiveResultBundle(configuration.resultBundlePath);
             await uploadResultBundleArtifact(resultBundleArchivePath, configuration.resultBundleName);
+            core.setOutput('result-bundle-path', path.resolve(configuration.resultBundlePath))
         }
     } catch (err) {
+        console.log(err);
         core.setFailed(`Build failed with an unexpected error: ${err.message}`);
     }
 };
@@ -2930,6 +2897,49 @@ function checkBypass(reqUrl) {
 }
 exports.checkBypass = checkBypass;
 
+
+/***/ }),
+
+/***/ 2449:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOptionalYesNoInput = exports.getOptionalBooleanInput = exports.getOptionalInput = void 0;
+function getOptionalInput(name) {
+    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`];
+    if (val !== undefined && val !== '<<undefined>>') {
+        return val.trim();
+    }
+    return undefined;
+}
+exports.getOptionalInput = getOptionalInput;
+function getOptionalBooleanInput(name) {
+    let value = getOptionalInput(name);
+    if (value !== undefined) {
+        value = value.toLowerCase();
+        if (value !== 'true' && value !== 'false') {
+            throw new Error(`Optional input <${name}> only accepts true or false. Got <${value}>.`);
+        }
+        return value === 'true';
+    }
+    return undefined;
+}
+exports.getOptionalBooleanInput = getOptionalBooleanInput;
+function getOptionalYesNoInput(name) {
+    let value = getOptionalInput(name);
+    if (value !== undefined) {
+        value = value.toUpperCase();
+        if (value !== 'YES' && value !== 'NO') {
+            throw new Error(`Optional input <${name}> only accepts yes or no. Got <${value}>.`);
+        }
+        return value === 'YES';
+    }
+    return undefined;
+}
+exports.getOptionalYesNoInput = getOptionalYesNoInput;
+//# sourceMappingURL=inputs.js.map
 
 /***/ }),
 
